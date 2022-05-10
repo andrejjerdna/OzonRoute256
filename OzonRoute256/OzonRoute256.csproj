@@ -9,10 +9,20 @@
 
   <ItemGroup>
     <Compile Remove="TestProblemA.cs" />
+    <Compile Remove="TestProblemB.cs" />
+    <Compile Remove="TestProblemC.cs" />
+    <Compile Remove="TestProblemD.cs" />
+    <Compile Remove="TestProblemE1.cs" />
+    <Compile Remove="TestProblemE2.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="TestProblemA.cs" />
+    <None Include="TestProblemB.cs" />
+    <None Include="TestProblemC.cs" />
+    <None Include="TestProblemD.cs" />
+    <None Include="TestProblemE1.cs" />
+    <None Include="TestProblemE2.cs" />
   </ItemGroup>
 
 </Project>
