@@ -14,6 +14,7 @@
     <Compile Remove="TestProblemD.cs" />
     <Compile Remove="TestProblemE1.cs" />
     <Compile Remove="TestProblemE2.cs" />
+    <Compile Remove="TestProblemF.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +24,7 @@
     <None Include="TestProblemD.cs" />
     <None Include="TestProblemE1.cs" />
     <None Include="TestProblemE2.cs" />
+    <None Include="TestProblemF.cs" />
   </ItemGroup>
 
 </Project>
