@@ -94,8 +94,6 @@ namespace OzonRoute256
                     _server.AddTask(new ServerTask(line.First(), line.Last()));
                 }
 
-                _server.SessionWait();
-
                 WriteLine(_server.DoneTasks);
             }
         }
@@ -133,91 +131,83 @@ namespace OzonRoute256
     public class SyncServer
     {
         private List<ServerTask> _doneTasks;
-        private IEnumerable<ServerThread> _threadPool;
-        private Queue<ServerTask> _tasks;
+        private SortedSet<ServerThread> _threadPool;
+        private int _threadCount;
 
         public IEnumerable<ServerTask> DoneTasks => _doneTasks;
 
         public void StartSession(int threadCount)
         {
-            _threadPool = GetThreadPool(threadCount);
-            _tasks = new Queue<ServerTask>();
+            _threadCount = threadCount;
+            _threadPool = new SortedSet<ServerThread>(new ThreadsComparer());
             _doneTasks = new List<ServerTask>();
-        }
-
-        public void SessionWait()
-        {
-            CheckQueue();
         }
 
         public void AddTask(ServerTask serverTask)
         {
-            CheckQueue();
-
-            var getTaskSatus = false;
-
-            var minEndTimes = int.MaxValue;
-
-            foreach (var thread in _threadPool)
+            if (_threadPool.Count < _threadCount)
             {
-                getTaskSatus = thread.AddTask(serverTask);
-
-                if (minEndTimes > thread.EndTime)
-                    minEndTimes = thread.EndTime;
-
-                if (getTaskSatus)
-                    break;
-            }
-
-            if (!getTaskSatus)
-            {
-                serverTask.StartTime = minEndTimes;
-                _tasks.Enqueue(serverTask);
+                var newThread = new ServerThread();
+                newThread.AddTask(serverTask);
+                _threadPool.Add(newThread);
             }
             else
             {
-                _doneTasks.Add(serverTask);
+                var thread = _threadPool.Min;
+                _threadPool.Remove(thread);
+                thread.AddTask(serverTask);
+                _threadPool.Add(thread);
             }
+
+             _doneTasks.Add(serverTask);
         }
 
-        private IEnumerable<ServerThread> GetThreadPool(int threadCount)
+        public class ThreadsComparer : IComparer<ServerThread>
         {
-            var result = new List<ServerThread>();
+            public int Compare(ServerThread? firstThread, ServerThread? secondThread)
+            {
+                if (secondThread == null || firstThread == null)
+                    return 0;
 
-            for (int i = 0; i < threadCount; i++)
-                result.Add(new ServerThread());
-
-            return result;
-        }
-
-        private void CheckQueue()
-        {
-            if (!_tasks.Any())
-                return;
-
-            for (var i = 0; i < _tasks.Count; i++)
-                AddTask(_tasks.Dequeue());
+                return secondThread.CompareTo(firstThread);
+            }
         }
     }
 
-    public class ServerThread
+    public class ServerThread : IComparable<ServerThread>
     {
-        private int _endTime;
-
+        private int _endTime = 0;
         public int EndTime => _endTime;
 
-        public bool AddTask(ServerTask serverTask)
+        public Guid Guid = Guid.NewGuid();
+
+        public void AddTask(ServerTask serverTask)
         {
             if (_endTime > serverTask.StartTime)
-                return false;
+            {
+                serverTask.EndTime = _endTime + serverTask.WorkTime;
+                _endTime = serverTask.EndTime;
 
-            if (_endTime <= serverTask.StartTime)
+            }
+            else
             {
                 serverTask.EndTime = serverTask.StartTime + serverTask.WorkTime;
                 _endTime = serverTask.EndTime;
             }
+        }
 
-            return true;
+        public int CompareTo(ServerThread? thread)
+        {
+            if (thread == null)
+                return 1;
+
+            if (Guid == thread.Guid)
+                return 0;
+
+            if (thread.EndTime > _endTime)
+                return 1;
+            else
+                return -1;
         }
     }
 }
