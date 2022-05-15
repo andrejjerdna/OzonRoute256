@@ -72,13 +72,37 @@ namespace OzonRoute256
 
             var result = GetEmptyResuls(k + 1);
 
-            var lastValue = 0;
             var list = new List<int>();
 
-            for (var currentNumber = 0; currentNumber < k + 1; currentNumber++)
+            var beNull = false;
+            var last = 0;
+
+            for (var currentNumber = 0; currentNumber < k; currentNumber++)
             {
                 var sum = data.Skip(currentNumber).Sum();
-                result[currentNumber] = Math.Abs(sum);
+                
+                if (sum > 0 && !beNull && currentNumber == 0)
+                {
+                    result[currentNumber] = 0;
+                    currentNumber--;
+                    beNull = true;
+                    last = 1;
+                    continue;
+                }
+
+                if (sum == 0 && !beNull && k == 2 && currentNumber == 0)
+                {
+                    var nextSum = Math.Abs(data.Skip(currentNumber + 1).Sum());
+                        result[currentNumber] = nextSum;
+
+                    beNull = true;
+                    last++;
+
+                    currentNumber--;
+                    continue;
+                }
+
+                result[currentNumber + last] = Math.Abs(sum);
             }
 
             list.Add(k);
